@@ -16,7 +16,7 @@ killall() {
 
 for ((i=0; i<$number_of_nodes; i++));
 do
-	ROS_NAMESPACE="sphero_$i" rosrun sphero_sprk_ros man_control.py /joystick_input:=/joy _sensitivity:=$sens &
+	ROS_NAMESPACE="sphero_$i" rosrun sphero_teleop man_control.py /joystick_input:=/joy _sensitivity:=$sens &
 done
 echo "DONE"
 

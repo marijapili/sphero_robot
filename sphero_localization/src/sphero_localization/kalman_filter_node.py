@@ -34,11 +34,15 @@ class KalmanFilterNode(object):
         """Initialize agent instance, create subscribers and publishers."""
         # Initialize class variables
         self.missing_counter = 0   # Counts iterations with missing marker information
-        self.search_radius = rospy.get_param('/associate_radius') # Sphero radius in meters
         self.pub_frequency = rospy.get_param('/ctrl_loop_freq')
         self.sub_frequency = rospy.get_param('/data_stream_freq')
         self.debug_enabled = rospy.get_param('/debug_kalman')
         self.data_associated = rospy.get_param('/data_associated')
+        if self.data_associated:
+            self.search_radius = 0
+        else:
+            self.search_radius = rospy.get_param('/associate_radius')
+
         self.X_est = None
         self.filter = None
         self.initial_position = None

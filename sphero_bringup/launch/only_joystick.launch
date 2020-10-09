@@ -1,0 +1,14 @@
+<launch>
+	<arg name="sensitivity" default="0.2"/>          	<!-- Sensitivity of a joystick. [0.0 - 1.0] -->
+	<arg name="joy_path" default="/dev/input/js0"/> 	<!-- Joystick device path. -->
+
+  <!-- Load all necessary parameters. -->
+  <rosparam command="load" file="$(find sphero_bringup)/params/default.yaml"/>
+
+  <!-- Start manual control and joystick nodes. -->
+  <node pkg="joy" type="joy_node" name="JoyInput">
+      <param name="dev" type="string" value="$(arg joy_path)"/>
+      <param name="deadzone" value="0"/>
+  </node>
+  <node pkg="sphero_teleop" type="manual_ctrl_launch.sh" name="joystick_launcher" args="$(arg sensitivity)" output="screen"/>
+</launch>
