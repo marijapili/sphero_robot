@@ -1,0 +1,9 @@
+<launch>
+  <arg name="num_of_robots" default="6"/>         <!-- Number of robots used. -->
+
+  <!-- Launch the OptiTrack streaming, Kalman filter, and initialization node. -->
+  <include file="$(find sphero_localization)/launch/localization.launch" pass_all_args="true"/>
+
+  <!-- Start the PID controllers. -->
+  <node pkg="sphero_control" type="pid_launch.sh" name="pid_launcher" output="screen"/>
+</launch>
