@@ -32,7 +32,7 @@ class ManControlNode(object):
         self.real_vel_stp = 0.5
         self.driving_mode = 'analog'
         self.manual_calibration = False
-        self.was_enabled = self.enabled = False
+        self.was_enabled = self.enabled = rospy.get_param('~enabled', False)
 
         # Work-around for displaying info messages. Currently, each Sphero has
         # its own manual control node even though they all get same commands.

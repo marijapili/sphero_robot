@@ -2,6 +2,7 @@
 
 number_of_nodes=$(rosparam get /num_of_robots)
 sens=$1
+enabled=$2
 echo "Launching $number_of_nodes Manual control nodes..."
 
 trap 'killall' INT
@@ -16,7 +17,7 @@ killall() {
 
 for ((i=0; i<$number_of_nodes; i++));
 do
-	ROS_NAMESPACE="sphero_$i" rosrun sphero_teleop man_control.py /joystick_input:=/joy _sensitivity:=$sens &
+	ROS_NAMESPACE="sphero_$i" rosrun sphero_teleop man_control.py /joystick_input:=/joy _sensitivity:=$sens _enabled:=$enabled &
 done
 echo "DONE"
 
