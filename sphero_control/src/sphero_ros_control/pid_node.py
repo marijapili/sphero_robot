@@ -24,7 +24,7 @@ class SpheroPID(object):
         Ki = 0.0005
         Kd = 0
         Td = 0.15
-        lim_lo = 10
+        lim_lo = -60
         lim_hi = 60
 
         # Initialize PID controllers.

@@ -4,7 +4,7 @@
 import rospy
 from geometry_msgs.msg import PoseArray, Pose
 from std_msgs.msg import ColorRGBA
-from sphero_formation.srv import *
+from sphero_localization.srv import *
 
 
 class InitializationNode(object):

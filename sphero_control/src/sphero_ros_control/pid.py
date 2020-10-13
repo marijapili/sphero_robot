@@ -44,6 +44,10 @@ class PID(object):
             u = self.lim_lo
             ui = self.ui_old
 
+        if abs(error) < 5:
+            u = 0
+
+
         # Save current values for next iteration
         self.ui_old = ui
         self.error_old = error
