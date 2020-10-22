@@ -16,4 +16,7 @@
 
   <!-- Start PID controllers. -->
   <node pkg="sphero_control" type="pid_launch.sh" name="pid_launcher" output="screen"/>
+
+  <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
+  <node pkg="sphero_bringup" type="twist_mux_launch.sh" name="twist_mux_launcher" output="screen"/>
 </launch>

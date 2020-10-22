@@ -15,7 +15,7 @@ class SpheroPID(object):
         self.reference = Point()
 
         # Define subscribers and publishers.
-        pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+        pub = rospy.Publisher('pid_vel', Twist, queue_size=1)
         rospy.Subscriber('odom', Odometry, self.odom_cb, queue_size=1)
         rospy.Subscriber('reference', Point, self.ref_cb, queue_size=1)
 

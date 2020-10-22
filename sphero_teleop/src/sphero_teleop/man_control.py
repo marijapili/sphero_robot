@@ -22,7 +22,7 @@ class ManControlNode(object):
         """Create subscribers and publishers and initialize class variables."""
 
         # Create publishers for commands
-        self.pub_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+        self.pub_vel = rospy.Publisher('man_vel', Twist, queue_size=1)
         self.pub_rgb_led = rospy.Publisher('set_color', ColorRGBA, queue_size=1)
         self.pub_calibrate = rospy.Publisher('manual_calibration', Bool, queue_size=1)
 
