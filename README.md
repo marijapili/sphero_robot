@@ -28,14 +28,18 @@ More packages are coming soon:
 1. Create a new catkin workspace or use an existing one.
 1. Clone the repository in the `src` folder of your workspace and update git submodules:
     ```shell script
-   $ cd <path_to_your_ws>/src/
-   $ git clone git@github.com:larics/sphero_robot.git
-   $ git submodule update
+    $ cd <path_to_your_ws>/src/
+    $ git clone --recursive git@github.com:larics/sphero_robot.git
     ```
-1. Build everything using catkin_tools:
+1. Build everything using catkin_tools (recommended):
     ```shell script
     $ catkin build
     ```
+   or catkin_make:
+   ```shell script
+   $ cd <path_to_your_ws>
+   $ catkin_make
+   ```
 
 ### Usage
 It is recommended to launch the drivers for the selected number of Spheros in a seperate terminal using the launch file provided in sphero_sprk_ros package (sometimes it is necessary to re-start the drivers a few times before all connections are sucessful). In a second terminal, use one of the provided launch files in sphero_bringup package.
