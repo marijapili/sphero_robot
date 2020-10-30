@@ -15,7 +15,7 @@ killall() {
 
 for ((i=0; i<$number_of_nodes; i++));
 do
-	roslaunch sphero_bringup twist_mux.launch namespace:="sphero_$i"
+	roslaunch sphero_bringup twist_mux.launch namespace:="sphero_$i" &
 done
 echo "DONE"
 

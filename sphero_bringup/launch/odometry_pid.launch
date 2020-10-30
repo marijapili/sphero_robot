@@ -1,3 +1,8 @@
+<!--
+IMPORTANT: data_stream_option argument in sphero_sprk_ros/drivers.launch must be set to "All".
+This will probably be fixed in the future
+-->
+
 <launch>
 	<arg name="sensitivity" default="0.2"/>          	<!-- Sensitivity of a joystick. [0.0 - 1.0] -->
 	<arg name="joy_path" default="/dev/input/js0"/> 	<!-- Joystick device path. -->
@@ -18,5 +23,5 @@
   <node pkg="sphero_control" type="pid_launch.sh" name="pid_launcher" output="screen"/>
 
   <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
-  <node pkg="sphero_bringup" type="twist_mux_launch.sh" name="twist_mux_launcher" output="screen"/>
+  <node pkg="sphero_bringup" type="twist_mux_launcher.sh" name="twist_mux_launcher" output="screen"/>
 </launch>

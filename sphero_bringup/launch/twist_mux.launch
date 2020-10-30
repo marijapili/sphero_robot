@@ -1,7 +1,8 @@
 <launch>
   <arg name="namespace" default="/"/>
-  <arg name="config_locks" default="$(find sphero_bringup)/params/twist_mux_joy_pid_locks.launch"/>
-  <arg name="config_topics" default="$(find sphero_bringup)/params/twist_mux_joy_pid_topics.launch"/>
+  <arg name="config_locks" default="$(find sphero_bringup)/params/twist_mux_joy_pid_locks.yaml"/>
+  <arg name="config_topics" default="$(find sphero_bringup)/params/twist_mux_joy_pid_topics.yaml"/>
+  <arg name="cmd_vel_out" default="cmd_vel"/>
 
   <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
   <node pkg="twist_mux" type="twist_mux" name="twist_mux" ns="$(arg namespace)" output="screen">

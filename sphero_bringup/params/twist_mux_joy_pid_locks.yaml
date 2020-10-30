@@ -9,4 +9,8 @@
 #             will be stopped/disabled
 
 locks:
+  - name: ""
+    topic: ""
+    timeout: 0.0
+    priority: 0
 

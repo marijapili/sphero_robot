@@ -9,10 +9,10 @@ topics:
   -
     name    : joystick
     topic   : man_vel
-    timeot  : 0.5
+    timeout : 0.5
     priority: 100
   -
     name    : pid
     topic   : pid_vel
-    timeot  : 0.5
+    timeout : 0.5
     priority: 50
