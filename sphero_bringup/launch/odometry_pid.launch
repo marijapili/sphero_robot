@@ -20,7 +20,7 @@ This will probably be fixed in the future
   <node pkg="sphero_teleop" type="manual_ctrl_launch.sh" name="joystick_launcher" args="$(arg sensitivity) $(arg enabled)" output="screen"/>
 
   <!-- Start PID controllers. -->
-  <node pkg="sphero_control" type="pid_launch.sh" name="pid_launcher" output="screen"/>
+  <node pkg="sphero_control" type="position_pid_launch.sh" name="pid_launcher" output="screen"/>
 
   <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
   <node pkg="sphero_bringup" type="twist_mux_launcher.sh" name="twist_mux_launcher" output="screen"/>

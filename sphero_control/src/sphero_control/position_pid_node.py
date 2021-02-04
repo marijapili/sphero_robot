@@ -7,7 +7,8 @@ from nav_msgs.msg import Odometry
 
 from pid import PID
 
-class SpheroPID(object):
+
+class SpheroPositionPID(object):
     def __init__(self):
         # Initialize class variables.
         self.cmd_vel = Twist()
@@ -60,6 +61,6 @@ if __name__ == "__main__":
     rospy.init_node("sphero_pid_control")
 
     try:
-        node = SpheroPID()
+        node = SpheroPositionPID()
     except rospy.ROSInterruptException:
         pass

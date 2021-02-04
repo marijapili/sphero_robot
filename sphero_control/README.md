@@ -3,7 +3,7 @@
 A package for various Sphero controllers.
 
 ### List of currently available controllers:
-- Position-based PID controller (`pid.py` and `pid_node.py`)
+- Position-based PID controller (`pid.py` and `position_pid_node.py`)
 
 ### Provided topics:
 - Publishers:

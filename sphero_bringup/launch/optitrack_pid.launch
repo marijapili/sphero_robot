@@ -15,7 +15,7 @@
   <node pkg="sphero_teleop" type="manual_ctrl_launch.sh" name="joystick_launcher" args="$(arg sensitivity) $(arg enabled)" output="screen"/>
 
   <!-- Start PID controllers. -->
-  <node pkg="sphero_control" type="pid_launch.sh" name="pid_launcher" output="screen">
+  <node pkg="sphero_control" type="position_pid_launch.sh" name="pid_launcher" output="screen">
       <remap from="odom" to="odom_est"/>
   </node>
 

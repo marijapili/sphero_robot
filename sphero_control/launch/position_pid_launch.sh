@@ -16,7 +16,7 @@ killall() {
 
 for ((i=0; i<$number_of_nodes; i++));
 do
-	ROS_NAMESPACE="sphero_$i" rosrun sphero_control pid_node.py &
+	ROS_NAMESPACE="sphero_$i" rosrun sphero_control position_pid_node.py &
 done
 echo "DONE"
 
