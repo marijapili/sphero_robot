@@ -1,6 +1,7 @@
 #!/bin/bash
 
 number_of_nodes=$(rosparam get /num_of_robots)
+func=$1
 echo "Launching $number_of_nodes twist_mux nodes..."
 
 trap 'killall' INT
@@ -15,7 +16,7 @@ killall() {
 
 for ((i=0; i<$number_of_nodes; i++));
 do
-	roslaunch sphero_bringup twist_mux.launch namespace:="sphero_$i" &
+	roslaunch sphero_bringup twist_mux.launch namespace:="sphero_$i" function:="$func" &
 done
 echo "DONE"
 

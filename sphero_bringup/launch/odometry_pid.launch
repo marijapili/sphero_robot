@@ -23,5 +23,5 @@ This will probably be fixed in the future
   <node pkg="sphero_control" type="position_pid_launch.sh" name="pid_launcher" output="screen"/>
 
   <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
-  <node pkg="sphero_bringup" type="twist_mux_launcher.sh" name="twist_mux_launcher" output="screen"/>
+  <node pkg="sphero_bringup" type="twist_mux_launcher.sh" name="twist_mux_launcher" args="joy_pid" output="screen"/>
 </launch>
