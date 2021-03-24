@@ -40,6 +40,10 @@ More packages are coming soon:
    $ cd <path_to_your_ws>
    $ catkin_make
    ```
+1. If you want to get the latest changes, use:
+    ```shell script
+    $ git pull --recurse-submodules
+    ```
 
 ### Usage
 It is recommended to launch the drivers for the selected number of Spheros in a seperate terminal using the launch file provided in sphero_sprk_ros package (sometimes it is necessary to re-start the drivers a few times before all connections are sucessful). In a second terminal, use one of the provided launch files in sphero_bringup package.
