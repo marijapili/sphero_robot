@@ -18,8 +18,7 @@ def np_to_points(np_array):
     points = [Point(x1, y1, 0),
               Point(x2, y1, 0),
               Point(x2, y2, 0),
-              Point(x1, y2, 0),
-              Point(x1, y1, 0)]
+              Point(x1, y2, 0)]
 
     return points, id
 
@@ -69,29 +68,46 @@ class SORTwrapper(object):
         self.markers_pub = rospy.Publisher('markers', MarkerArray, queue_size=10)
 
         # Case-specific parameters and data subscribers.
-        self.num_agents = rospy.get_param('/num_of_robots')
-        robot_name = rospy.get_param('/robot_name')
+        self.num_agents = 1
+        self.first = True
+        # robot_name = rospy.get_param('/robot_name')
 
-        subs = [mf.Subscriber(robot_name + '_{}/odom'.format(i), Odometry) for i in range(self.num_agents)]
-        self.ts = mf.ApproximateTimeSynchronizer(subs, 10, 0.11)  # TODO: set this to be parametric as well
-        self.ts.registerCallback(self.update_cb)
+        # subs = [mf.Subscriber(robot_name + '_{}/odom'.format(i), Odometry) for i in range(self.num_agents)]
+        # self.ts = mf.ApproximateTimeSynchronizer(subs, 10, 0.11)  # TODO: set this to be parametric as well
+        # self.ts.registerCallback(self.update_cb)
+        self.pub1 = rospy.Publisher('sphero_0/odom', Odometry, queue_size=1)
+        self.pub2 = rospy.Publisher('sphero_1/odom', Odometry, queue_size=1)
+        self.pub3 = rospy.Publisher('sphero_2/odom', Odometry, queue_size=1)
 
-        rospy.spin()
-
-    def update_cb(self, *data):
+    def update_cb(self, data):
         # Convert input data to numpy array.
-        detections = np.ndarray((self.num_agents, 5))
+        detections = np.ndarray((len(data), 5))
         for i, obj in enumerate(data):
-            center = obj.pose.pose.position
-            x1 = center.x - self.bb_size
-            x2 = center.x + self.bb_size
-            y1 = center.y - self.bb_size
-            y2 = center.y + self.bb_size
+            x1 = obj[0] - self.bb_size
+            x2 = obj[0] + self.bb_size
+            y1 = obj[1] - self.bb_size
+            y2 = obj[1] + self.bb_size
             score = 1
             detections[i] = np.array([x1, y1, x2, y2, score])
 
         # Update the tracker
         tracked = self.tracker.update(detections)
+
+        for obj in tracked:
+            points, id = np_to_points(obj)
+            temp_msg = Odometry()
+            temp_msg.pose.pose.position.x = points[0].x + self.bb_size
+            temp_msg.pose.pose.position.y = points[0].y + self.bb_size
+            if len(data) == 3:
+                if id == 1:
+                    temp_msg.header.frame_id = 'sphero_0'
+                    self.pub1.publish(temp_msg)
+                elif id == 2:
+                    temp_msg.header.frame_id = 'sphero_1'
+                    self.pub2.publish(temp_msg)
+                else:
+                    temp_msg.header.frame_id = 'sphero_2'
+                    self.pub3.publish(temp_msg)
 
         # Publish tracked objects.
         marker_array = MarkerArray()
@@ -101,12 +117,3 @@ class SORTwrapper(object):
             marker_array.markers.append(bbox)
             marker_array.markers.append(name)
         self.markers_pub.publish(marker_array)
-
-
-if __name__ == "__main__":
-    rospy.init_node("sort_wrapper")
-
-    try:
-        node = SORTwrapper()
-    except rospy.ROSInterruptException:
-        pass
