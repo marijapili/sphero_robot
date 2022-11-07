@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
 import message_filters as mf
@@ -62,7 +62,7 @@ class SORTwrapper(object):
         max_age = rospy.get_param('~max_age', 3)  # Default: 1
         min_hits = rospy.get_param('~min_hits', 3)  # Default: 3
         iou_threshold = rospy.get_param('~iou_threshold', 0.15)  # Default: 0.3
-        self.bb_size = rospy.get_param('~bb_size', 0.05)
+        self.bb_size = rospy.get_param('~bb_size', 0.2)
         self.tracker = Sort(max_age=max_age, min_hits=min_hits, iou_threshold=iou_threshold)
 
         # Publishers for the tracked data.
