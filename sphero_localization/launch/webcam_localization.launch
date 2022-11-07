@@ -1,0 +1,7 @@
+<launch>
+	<!-- Start Optitrack data streaming node. -->
+	<node pkg="sphero_localization" type="webcam_tracking.py" name="web_tracking" output="screen"/>
+
+	<!-- Start Kalman filter nodes launcher. -->
+	<node pkg="sphero_localization" type="kalman_filter_launch.sh" name="kalman_launcher" output="screen"/>
+</launch>
