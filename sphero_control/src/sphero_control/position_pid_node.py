@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
 
@@ -56,6 +56,7 @@ class SpheroPositionPID(object):
             msg (Odometry): Current Sphero odometry.
         """
         self.reference = msg
+
 
 if __name__ == "__main__":
     rospy.init_node("sphero_pid_control")

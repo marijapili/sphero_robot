@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import cv2
 import rospy
@@ -22,6 +22,7 @@ class WebcamTracker(object):
 
         self.stream.release()
         cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     rospy.init_node("webcam_tracker")

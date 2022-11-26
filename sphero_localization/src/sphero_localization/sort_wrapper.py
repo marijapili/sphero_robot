@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
 import message_filters as mf
@@ -13,7 +13,7 @@ from sort import Sort
 
 
 def np_to_points(np_array):
-    x1, y1, x2, y2, id = np_array
+    x1, y1, x2, y2, ID = np_array
 
     points = [Point(x1, y1, 0),
               Point(x2, y1, 0),
@@ -21,15 +21,15 @@ def np_to_points(np_array):
               Point(x1, y2, 0),
               Point(x1, y1, 0)]
 
-    return points, id
+    return points, ID
 
 
-def create_markers(points, id):
+def create_markers(points, ID):
     box = Marker()
     box.header.frame_id = 'map'
     box.header.stamp = rospy.get_rostime()
     box.ns = 'tracked_bb'
-    box.id = id
+    box.id = ID
     box.type = Marker.LINE_STRIP
     box.action = Marker.ADD
     box.pose = Pose()
@@ -43,12 +43,12 @@ def create_markers(points, id):
     text.header.frame_id = 'map'
     text.header.stamp = rospy.get_rostime()
     text.ns = 'tracked_id'
-    text.id = id
+    text.id = ID
     text.type = Marker.TEXT_VIEW_FACING
     text.action = Marker.ADD
     text.pose = Pose(points[0], Quaternion())
     text.scale.z = 0.25
-    text.text = str(int(id))
+    text.text = str(int(ID))
     text.color = ColorRGBA(1, 0, 0, 1)
     text.lifetime = rospy.Duration(0.2)
     text.frame_locked = True
@@ -96,8 +96,8 @@ class SORTwrapper(object):
         # Publish tracked objects.
         marker_array = MarkerArray()
         for obj in tracked:
-            points, id = np_to_points(obj)
-            bbox, name = create_markers(points, id)
+            points, ID = np_to_points(obj)
+            bbox, name = create_markers(points, ID)
             marker_array.markers.append(bbox)
             marker_array.markers.append(name)
         self.markers_pub.publish(marker_array)
