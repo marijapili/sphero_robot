@@ -21,7 +21,7 @@ class KalmanFilter(object):
         Q = np.diag([q, q, q, q])
         L = np.diag([T ** 2 / 2, T ** 2 / 2, T, T])
         self.Q = L.dot(Q).dot(L.T)
-        self.R = 1e-6 * np.eye(2)
+        self.R = 1e-2 * np.eye(2)
 
         self.A = np.array([[1, 0, T, 0], [0, 1, 0, T], [0, 0, 1, 0], [0, 0, 0, 1]])
         self.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]])
