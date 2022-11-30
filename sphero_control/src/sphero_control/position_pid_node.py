@@ -21,16 +21,17 @@ class SpheroPositionPID(object):
         rospy.Subscriber('reference', Point, self.ref_cb, queue_size=1)
 
         # Set PID parameters.
-        Kp = 0.5
-        Ki = 0.0005
+        Kp = 0.25 * 255
+        Ki = 0.0005 * 255
         Kd = 0
         Td = 0.15
         lim_lo = -60
         lim_hi = 60
+        tol = 0.1
 
         # Initialize PID controllers.
-        self.pid_x = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi)
-        self.pid_y = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi)
+        self.pid_x = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi, tol)
+        self.pid_y = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi, tol)
 
         rate = rospy.Rate(1/Td)
         while not rospy.is_shutdown():

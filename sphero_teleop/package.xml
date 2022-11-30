@@ -13,10 +13,8 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>rospy</depend>
-
+  
   <exec_depend>joy</exec_depend>
-  <exec_depend>teleop_twist_keyboard</exec_depend>
-
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

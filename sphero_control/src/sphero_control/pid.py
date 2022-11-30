@@ -1,5 +1,5 @@
 class PID(object):
-    def __init__(self, kp, ki, kd, Td, lim_lo, lim_hi):
+    def __init__(self, kp, ki, kd, Td, lim_lo, lim_hi, tol):
         # Initialize gains.
         self.kp = kp  # Proportional gain
         self.ki = ki  # Integral gain
@@ -14,7 +14,8 @@ class PID(object):
         self.ui_old = 0
 
         # Initialize other values.
-        self.Td = Td  # Sampling period
+        self.Td = Td    # Sampling period
+        self.tol = tol  # Error tolerance (deadzone)
 
     def compute(self, ref, meas):
         """
@@ -44,7 +45,7 @@ class PID(object):
             u = self.lim_lo
             ui = self.ui_old
 
-        if abs(error) < 5:
+        if abs(error) < self.tol:
             u = 0
 
 
