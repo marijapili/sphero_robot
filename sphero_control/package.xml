@@ -14,7 +14,6 @@
 
   <depend>rospy</depend>
 
-  <exec_depend>sphero_sprk_ros</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

@@ -1,0 +1,10 @@
+<launch>
+	<!-- Set args -->
+  	<arg name="num_of_robots" default="1"/>
+
+	<!-- Config file with Sphero addresses -->
+	<arg name="filename" default="$(find sphero_driver_v2)/cfg/sphero_addresses.txt"/>
+
+	<!-- Start Sphero driver nodes launcher. -->
+	<node pkg="sphero_driver_v2" type="drivers_launch.sh" name="drivers_launcher" args="$(arg num_of_robots) $(arg filename)" output="screen"/>
+</launch>
