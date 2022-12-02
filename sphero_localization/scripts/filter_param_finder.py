@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+This script will help you find the best HSV or RGB color filter parameters
+for your application. By moving the sliders, you can see the effects of changed
+parameters on the filter mask in real time.
 
-# USAGE: You need to specify a filter and "only one" image source
-#
-# (python) range-detector --filter RGB --image /path/to/image.png
-# or
-# (python) range-detector --filter HSV --webcam
+USAGE: You need to specify a filter and "only one" image source
 
+(python3) filter_param_finder --filter RGB --image /path/to/image.png
+or
+(python3) filter_param_finder --filter HSV --webcam
+
+"""
 import cv2
 import argparse
 from operator import xor

@@ -56,30 +56,35 @@ def create_markers(points, ID):
 
 
 class SORTwrapper(object):
-    def __init__(self):
+    def __init__(self, max_age=3, min_hits=3, iou_threshold=0.15, bb_size=0.2, num_robots=1):
         # Load parameters and create a tracker object.
-        max_age = rospy.get_param('~max_age', 3)  # Default: 1
-        min_hits = rospy.get_param('~min_hits', 3)  # Default: 3
-        iou_threshold = rospy.get_param('~iou_threshold', 0.15)  # Default: 0.3
-        self.bb_size = rospy.get_param('~bb_size', 0.2)
+        max_age = rospy.get_param('~max_age', max_age)
+        min_hits = rospy.get_param('~min_hits', min_hits)
+        iou_threshold = rospy.get_param('~iou_threshold', iou_threshold)
+        self.bb_size = rospy.get_param('~bb_size', bb_size)
         self.tracker = Sort(max_age=max_age, min_hits=min_hits, iou_threshold=iou_threshold)
 
         # Publishers for the tracked data.
         self.markers_pub = rospy.Publisher('markers', MarkerArray, queue_size=10)
 
         # Case-specific parameters and data subscribers.
-        self.num_agents = 1
-        self.first = True
-        # robot_name = rospy.get_param('/robot_name')
+        self.num_robots = rospy.get_param('/num_of_robots', num_robots)
+        self.robot_name = rospy.get_param('/robot_name', 'sphero')
 
         # subs = [mf.Subscriber(robot_name + '_{}/odom'.format(i), Odometry) for i in range(self.num_agents)]
         # self.ts = mf.ApproximateTimeSynchronizer(subs, 10, 0.11)  # TODO: set this to be parametric as well
         # self.ts.registerCallback(self.update_cb)
-        self.pub1 = rospy.Publisher('sphero_0/odom', Odometry, queue_size=1)
-        self.pub2 = rospy.Publisher('sphero_1/odom', Odometry, queue_size=1)
-        self.pub3 = rospy.Publisher('sphero_2/odom', Odometry, queue_size=1)
+        self.pubs = [rospy.Publisher(f'/{self.robot_name}_{i}/position', Point, queue_size=1)
+                     for i in range(self.num_robots)]
 
+    # TODO: make it general so it can be called directly or as a callback
     def update_cb(self, data):
+        """
+        Update tracker with new measurements.
+        
+        params:
+            data (list[tuple[float, float]]): Centers of measurements.
+        """
         # Convert input data to numpy array.
         detections = np.ndarray((len(data), 5))
         for i, obj in enumerate(data):
@@ -90,30 +95,24 @@ class SORTwrapper(object):
             score = 1
             detections[i] = np.array([x1, y1, x2, y2, score])
 
-        # Update the tracker
+        # Update the tracker.
         tracked = self.tracker.update(detections)
-
-        for obj in tracked:
-            points, id = np_to_points(obj)
-            temp_msg = Odometry()
-            temp_msg.pose.pose.position.x = points[0].x + self.bb_size
-            temp_msg.pose.pose.position.y = points[0].y + self.bb_size
-            if len(data) == 3:
-                if id == 1:
-                    temp_msg.header.frame_id = 'sphero_0'
-                    self.pub1.publish(temp_msg)
-                elif id == 2:
-                    temp_msg.header.frame_id = 'sphero_1'
-                    self.pub2.publish(temp_msg)
-                else:
-                    temp_msg.header.frame_id = 'sphero_2'
-                    self.pub3.publish(temp_msg)
-
-        # Publish tracked objects.
+        
         marker_array = MarkerArray()
         for obj in tracked:
-            points, ID = np_to_points(obj)
-            bbox, name = create_markers(points, ID)
+            points, id = np_to_points(obj)
+            
+            # Publish positions of tracked objects.
+            temp_msg = Point()
+            temp_msg.x = points[0].x + self.bb_size
+            temp_msg.y = points[0].y + self.bb_size
+            # TODO: publish even if no tracking
+            if len(tracked) == self.num_robots:
+                self.pubs[int(id - 1)].publish(temp_msg)
+
+            # Publish visualization of tracked objects.
+            bbox, name = create_markers(points, id)
             marker_array.markers.append(bbox)
             marker_array.markers.append(name)
+        
         self.markers_pub.publish(marker_array)

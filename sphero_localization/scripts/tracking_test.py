@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from collections import deque
-from imutils.video import VideoStream
+from imutils.video import VideoStream, WebcamVideoStream
 import numpy as np
 import argparse
 import cv2
@@ -8,7 +8,13 @@ import imutils
 import time
 
 
-vs = VideoStream(src=2).start()
+
+
+
+vs = VideoStream(src='/dev/video2')
+vs.stream.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+vs.stream.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
+vs.start()
 
 # construct the argument parse and parse the arguments
 # define the lower and upper boundaries of the "green"
@@ -33,7 +39,7 @@ while True:
 		break
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
-	frame = imutils.resize(frame, width=600)
+	# frame = imutils.resize(frame, width=600)
 	blurred = cv2.GaussianBlur(frame, (3, 3), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	# construct a mask for the color "green", then perform

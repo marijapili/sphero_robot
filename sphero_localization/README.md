@@ -19,3 +19,6 @@ A package for external localization of Sphero robots.
 - Subscribers:
     - `/<robot_name>/odom` (nav_msgs/Odometry or geometry_msgs/PoseArray) - Position streamed from the external sensor. <br>
     (_Note: Kalman filter currently expects inputs only from OptiTrack system or stage_ros simulator. The former uses PoseArray messages and position data is not mapped. The latter uses Odometry and the streamed positions are unique for each robot. This will be changed in the future to accept a wider range of measurements._)
+
+### TODO:
+- [ ] Separate ROS from non-ROS code
