@@ -20,6 +20,8 @@ from tf.transformations import quaternion_from_euler
 
 from sphero_constants import *
 
+# TODO: cathc concurrent.futures._base.TimeoutError
+
 class SpheroNode(object):
     def __init__(self):
         # Basic parameters
@@ -40,6 +42,7 @@ class SpheroNode(object):
         self.robot_api = None
         
         # Robot state
+        self.is_connected = False
         self.is_enabled = False
         self.cmd_speed = 0
         self.cmd_heading = 0
@@ -72,6 +75,10 @@ class SpheroNode(object):
     ## Start, stop, and spin methods.
     def start(self):
         attempts_left = self.connection_attempts
+        # FIXME: ugly fix to separate connection attempts to multiple robots
+        delay = float(self.ns.split('_')[-1]) * 2
+        rospy.sleep(delay)
+        
         rospy.loginfo("Trying to connect.")
         while attempts_left > 0:
             try:
@@ -87,17 +94,19 @@ class SpheroNode(object):
         
         rospy.loginfo(f"Connected to Sphero '{self.ns}' with BT name {self.sphero_name}.")
         
-        self.robot_api = SpheroEduAPI(self.robot_llc)
-        self.robot_api.__enter__()
+        self.robot_api = SpheroEduAPI(self.robot_llc)  # FIXME: sometimes dies with bleak.exc.BleakDBusError: [org.bluez.Error.InProgress] In Progress
+        self.robot_api.__enter__()  # FIXME Then this dies with concurrent.futures._base.TimeoutError
         
         rospy.sleep(1.0)
         
         self.robot_api.set_main_led(self.connect_color)
         self.is_enabled = True
+        self.is_connected = True
+        rospy.loginfo(f"Sphero '{self.ns}' with BT name {self.sphero_name} is ready.")
         
     def spin(self):
         r = rospy.Rate(10.0)
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and self.is_connected:
             now = rospy.Time.now()
             # If there is no command for velocity longer than 5 seconds, stop the Sphero.
             if (now - self.last_cmd_vel_time) > self.cmd_vel_timeout and self.is_enabled:
@@ -118,13 +127,21 @@ class SpheroNode(object):
             r.sleep()
             
     def stop(self):
-        self.robot_api.__exit__(None, None, None)
+        if self.is_connected:
+            self.is_connected = False
+            rospy.loginfo('Stopping.')
+            rospy.sleep(2.0)
+            rospy.loginfo('Disconnecting from the robot.')
+            self.batt_timer.shutdown()
+            self.robot_api.__exit__(None, None, None)
+        else:
+            rospy.loginfo('Robot already disconnected.')
     
     ## ROS callback -> Sphero command
     def cmd_vel(self, msg: Twist):
         """Send command for setting the velocity."""
         self.last_cmd_vel_time = rospy.Time.now()
-        if self.is_enabled:
+        if self.is_enabled and self.is_connected:
             if msg.linear.x == 0 and msg.linear.y == 0:
                 self.cmd_heading = self.last_cmd_heading
             else:
@@ -282,9 +299,13 @@ if __name__ == "__main__":
     
     try:
         node = SpheroNode()
+        rospy.on_shutdown(node.stop)
         node.start()
         node.spin()
-    except rospy.ROSInterruptException:
-        node.stop()
-    finally:
-        node.stop()
+    except rospy.ROSInterruptException as e:
+        pass
+    #     print(f'ROS exception\n{e}')
+    #     node.stop()
+    # finally:
+    #     print('Shutting down normally.')
+    #     node.stop()
