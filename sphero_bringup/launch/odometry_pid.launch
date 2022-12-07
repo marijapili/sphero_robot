@@ -10,7 +10,6 @@ This will probably be fixed in the future
 
   <!-- Load all necessary parameters. -->
   <rosparam command="load" file="$(find sphero_bringup)/params/default.yaml"/>
-  <param name="data_associated" type="bool" value="false"/>
 
   <!-- Start manual control and joystick nodes. -->
   <node pkg="joy" type="joy_node" name="JoyInput">

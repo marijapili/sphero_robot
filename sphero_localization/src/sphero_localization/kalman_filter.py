@@ -31,8 +31,8 @@ class KalmanFilter(object):
 
     def get_numpy_state(self, position, velocity):
         """Convert from some type (here: ROS msg) to numpy array."""
-        x = position.position.x
-        y = position.position.y
+        x = position.x
+        y = position.y
         vx = velocity.linear.x
         vy = velocity.linear.y
         state = np.array([[x, y, vx, vy]])
@@ -40,10 +40,7 @@ class KalmanFilter(object):
 
     def get_used_state(self, np_state):
         """Convert from numpy array to type used elsewhere (here: ROS msg)."""
-        time = rospy.Time.now()
         msg = Odometry()
-        msg.header.stamp = time
-        msg.header.frame_id = rospy.get_namespace()
         msg.pose.pose.position.x = np_state[0][0]
         msg.pose.pose.position.y = np_state[1][0]
         msg.twist.twist.linear.x = np_state[2][0]

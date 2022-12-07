@@ -1,6 +1,11 @@
 <launch>
-	<!-- Start Optitrack data streaming node. -->
-	<node pkg="sphero_localization" type="webcam_tracking.py" name="web_tracking" output="screen"/>
+	<!-- Start Webcam data streaming node. -->
+	<node pkg="sphero_localization" type="webcam_tracking.py" name="webcam_tracking" output="screen">
+		<param name="config_path" value="$(find sphero_localization)/config/config.yaml"/>
+	</node>
+
+	<!-- Set data streaming frequency parameter for Kalman filter -->
+	<param name="/data_stream_freq" value="20"/>
 
 	<!-- Start Kalman filter nodes launcher. -->
 	<node pkg="sphero_localization" type="kalman_filter_launch.sh" name="kalman_launcher" output="screen"/>

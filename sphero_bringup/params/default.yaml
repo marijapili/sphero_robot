@@ -1,7 +1,5 @@
 robot_name: "sphero"    # Name of the robot used for namespaces.
 num_of_robots: 1        # Number of robots used.
 ctrl_loop_freq: 10      # Frequency used by controllers.
-data_stream_freq: 100   # Position streaming frequency, used by Kalman filter.
 
 debug_kalman: false     # Enable Kalman filter debugging.
-associate_radius: 0.05  # Radius in which Kalman filter searches for possible position data.

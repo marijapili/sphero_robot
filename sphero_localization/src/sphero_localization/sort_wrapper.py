@@ -9,7 +9,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
 
-from sort import Sort
+from sphero_localization.sort import Sort
 
 
 def np_to_points(np_array):
@@ -19,8 +19,11 @@ def np_to_points(np_array):
               Point(x2, y1, 0),
               Point(x2, y2, 0),
               Point(x1, y2, 0)]
+    
+    # TODO: Named tuple
+    center = ((x1 + x2) / 2, (y1 + y2) / 2)
 
-    return points, ID
+    return points, center, int(ID)
 
 
 def create_markers(points, ID):
@@ -54,14 +57,13 @@ def create_markers(points, ID):
 
     return box, text
 
-
+# TODO: make parameters more accessible
 class SORTwrapper(object):
-    def __init__(self, max_age=3, min_hits=3, iou_threshold=0.15, bb_size=0.2, num_robots=1):
+    def __init__(self, max_age=5, min_hits=3, iou_threshold=0.15, num_robots=1):
         # Load parameters and create a tracker object.
         max_age = rospy.get_param('~max_age', max_age)
         min_hits = rospy.get_param('~min_hits', min_hits)
         iou_threshold = rospy.get_param('~iou_threshold', iou_threshold)
-        self.bb_size = rospy.get_param('~bb_size', bb_size)
         self.tracker = Sort(max_age=max_age, min_hits=min_hits, iou_threshold=iou_threshold)
 
         # Publishers for the tracked data.
@@ -88,11 +90,12 @@ class SORTwrapper(object):
         # Convert input data to numpy array.
         detections = np.ndarray((len(data), 5))
         for i, obj in enumerate(data):
-            x1 = obj[0] - self.bb_size
-            x2 = obj[0] + self.bb_size
-            y1 = obj[1] - self.bb_size
-            y2 = obj[1] + self.bb_size
             score = 1
+            bbox_size = obj[1]
+            x1 = obj[0][0] - bbox_size
+            x2 = obj[0][0] + bbox_size
+            y1 = obj[0][1] - bbox_size
+            y2 = obj[0][1] + bbox_size
             detections[i] = np.array([x1, y1, x2, y2, score])
 
         # Update the tracker.
@@ -100,15 +103,15 @@ class SORTwrapper(object):
         
         marker_array = MarkerArray()
         for obj in tracked:
-            points, id = np_to_points(obj)
+            points, center, id = np_to_points(obj)
             
             # Publish positions of tracked objects.
             temp_msg = Point()
-            temp_msg.x = points[0].x + self.bb_size
-            temp_msg.y = points[0].y + self.bb_size
+            temp_msg.x = center[0]
+            temp_msg.y = center[1]
             # TODO: publish even if no tracking
             if len(tracked) == self.num_robots:
-                self.pubs[int(id - 1)].publish(temp_msg)
+                self.pubs[id - 1].publish(temp_msg)
 
             # Publish visualization of tracked objects.
             bbox, name = create_markers(points, id)

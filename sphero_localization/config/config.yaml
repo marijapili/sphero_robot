@@ -1,0 +1,10 @@
+# Linux path to the cameras. Example: /dev/video0
+cameras:
+  - '/dev/video2'
+
+# Camera calibration files. Must be in the same directory as this config.
+calibrations:
+  - 'camera_south.json'
+
+# Show a window with camera stream.
+show_stream: True
