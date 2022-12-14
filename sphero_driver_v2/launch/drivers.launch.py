@@ -14,6 +14,7 @@ def create_launch_file(file_path, bluetooth_names):
     with open(file_path, 'w+') as launch_file:
         launch_file.write('<launch>\n')
         launch_file.write('<env name="ROSCONSOLE_FORMAT" value="[${severity}] [${node}]> ${message}"/>\n\n')
+        launch_file.write(f'<param name="num_of_robots" value="{len(bluetooth_names)}"/>')
         for i, name in enumerate(bluetooth_names):
             launch_file.write(f'<node pkg="sphero_driver_v2" type="sphero_node.py" name="sphero_driver" ns="sphero_{i}" output="screen">\n')
             launch_file.write(f'<param name="name" value="{name}"/>\n')

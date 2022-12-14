@@ -1,5 +1,2 @@
 robot_name: "sphero"    # Name of the robot used for namespaces.
-num_of_robots: 1        # Number of robots used.
 ctrl_loop_freq: 10      # Frequency used by controllers.
-
-debug_kalman: false     # Enable Kalman filter debugging.
