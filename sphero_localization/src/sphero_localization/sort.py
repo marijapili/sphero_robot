@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import numpy as np
 from filterpy.kalman import KalmanFilter
+import cv2
 
 np.random.seed(0)
 
@@ -96,11 +97,11 @@ class KalmanBoxTracker(object):
     self.kf.F = np.array([[1,0,0,0,1,0,0],[0,1,0,0,0,1,0],[0,0,1,0,0,0,1],[0,0,0,1,0,0,0],  [0,0,0,0,1,0,0],[0,0,0,0,0,1,0],[0,0,0,0,0,0,1]])
     self.kf.H = np.array([[1,0,0,0,0,0,0],[0,1,0,0,0,0,0],[0,0,1,0,0,0,0],[0,0,0,1,0,0,0]])
 
-    self.kf.R[2:,2:] *= 10.
+    self.kf.R[2:,2:] *= 0.0001
     self.kf.P[4:,4:] *= 1000. #give high uncertainty to the unobservable initial velocities
     self.kf.P *= 10.
-    self.kf.Q[-1,-1] *= 0.01
-    self.kf.Q[4:,4:] *= 0.01
+    self.kf.Q[-1,-1] *= 100
+    self.kf.Q[4:,4:] *= 100
 
     self.kf.x[:4] = convert_bbox_to_z(bbox)
     self.time_since_update = 0
@@ -198,7 +199,7 @@ class Sort(object):
     self.trackers = []
     self.frame_count = 0
 
-  def update(self, dets=np.empty((0, 5))):
+  def update(self, dets=np.empty((0, 5)), frame=None):
     """
     Params:
       dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
@@ -221,6 +222,12 @@ class Sort(object):
     for t in reversed(to_del):
       self.trackers.pop(t)
     matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets,trks, self.iou_threshold)
+    
+    if frame is not None:
+      for det in dets:
+        cv2.rectangle(frame, (int(det[0]), int(det[1])), (int(det[2]), int(det[3])), color=(0, 0, 255), thickness=2)
+      for trk in trks:
+        cv2.rectangle(frame, (int(trk[0]), int(trk[1])), (int(trk[2]), int(trk[3])), color=(0, 255, 0), thickness=2)
 
     # update matched trackers with assigned detections
     for m in matched:
@@ -234,11 +241,13 @@ class Sort(object):
     for trk in reversed(self.trackers):
         d = trk.get_state()[0]
         if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
+          # if frame is not None:
+          #   cv2.rectangle(frame, (int(d[0]), int(d[1])), (int(d[2]), int(d[3])), color=(255, 0, 0), thickness=2)
           ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
         i -= 1
         # remove dead tracklet
         if(trk.time_since_update > self.max_age):
           self.trackers.pop(i)
     if(len(ret)>0):
-      return np.concatenate(ret)
-    return np.empty((0,5))
+      return np.concatenate(ret), frame
+    return np.empty((0,5)), frame

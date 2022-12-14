@@ -31,7 +31,7 @@ class SpheroBlobDetector(object):
             
         if hsv_mask is None:
             self.hsv_mask = (
-                (0, 0, 200),
+                (0, 0, 220),
                 (255, 255, 255)
             )
             
@@ -52,7 +52,7 @@ class SpheroBlobDetector(object):
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.hsv_mask[0], self.hsv_mask[1])
         mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=4)  # Erode and dilate are used to remove excess small blobs.
+        mask = cv2.dilate(mask, None, iterations=2)  # Erode and dilate are used to remove excess small blobs.
         mask = cv2.bitwise_not(mask)
 
         # Detect blobs.
@@ -62,7 +62,6 @@ class SpheroBlobDetector(object):
         for kpt in keypoints:
             cnt = (int(kpt.pt[0]), int(kpt.pt[1]))
             cv2.circle(frame, cnt, int(kpt.size / 2), (0, 255, 255), 2)
-            cv2.circle(frame, cnt, 5, (0, 0, 255), -1)
             frame = cv2.putText(frame, f'({cnt[0]}, {cnt[1]})', (cnt[0] + 20, cnt[1]), **self.label_kwargs)
             
         # TODO: When adding new detectors, synchronize the interface for getting keypoint data.
@@ -72,7 +71,7 @@ class SpheroBlobDetector(object):
 def main():
     detector = SpheroBlobDetector()
     
-    vs = cv2.VideoCapture('/dev/video4')
+    vs = cv2.VideoCapture('/dev/video2')
     vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
 

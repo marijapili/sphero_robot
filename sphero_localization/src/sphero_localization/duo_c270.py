@@ -6,9 +6,8 @@ import json
 import numpy as np
 from imutils.video import VideoStream
 
-# TODO: rate
-# TODO: exposure
 # TODO: transform
+# TODO: threading
 
 
 class FrameServer(object):
@@ -27,9 +26,12 @@ class FrameServer(object):
         
         # Open camera streams.
         for dev in devices:
-            vs = cv2.VideoCapture(dev)
+            vs = cv2.VideoCapture(dev, cv2.CAP_V4L2)
             vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
+            vs.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            vs.set(cv2.CAP_PROP_FPS, 20)
+            print(f"Camera frame rate set to {vs.get(cv2.CAP_PROP_FPS)}.")
             self.streams.append(vs)
         
         self.window_size = self.SINGLE_WINDOW if len(devices) == 1 else self.DOUBLE_WINDOW
@@ -61,7 +63,7 @@ class FrameServer(object):
         for vs in self.streams:
             vs.release()
             
-    # TODO: rewrite this method to be more professional.
+    # TODO: rewrite this method to be more professional. (multiple returns)
     def grab(self, ret_original=False):
         original_frames = []
         for vs in self.streams:
@@ -120,16 +122,15 @@ class FrameServer(object):
         
         return cv2.vconcat(cropped)
             
-    
 
 def main():
     cams = [
-            '/dev/video4',
+            # '/dev/video4',
             '/dev/video2',
     ]
     
     calibrations = [
-        '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_north.json',
+        # '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_north.json',
         '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_south.json'
     ]
     
@@ -139,9 +140,13 @@ def main():
     
     fs = FrameServer(cams, calibrations)
     
+    old = time.perf_counter()
     
     while True:
         _, joined = fs.grab()
+        new = time.perf_counter()
+        print(1 / (new - old))
+        old = new
        
         # cv2.imshow("north", individual[0])
         # cv2.resizeWindow('north', 960, 720)
@@ -149,7 +154,7 @@ def main():
         # cv2.resizeWindow('south', 960, 720)
         
         cv2.imshow("joined", joined)
-        cv2.resizeWindow('joined', 576, 864)
+        cv2.resizeWindow('joined', fs.window_size)
 
         
         key = cv2.waitKey(1) & 0xFF

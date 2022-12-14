@@ -10,17 +10,15 @@ import yaml
 
 from sphero_localization.duo_c270 import FrameServer
 from sphero_localization.sort import Sort
-from sphero_localization.sphero_blob_detector import SpheroBlobDetector
+from sphero_localization.blob_detector import SpheroBlobDetector
 
 
 def np_to_points(np_array):
     x1, y1, x2, y2, ID = np_array
-    
     # TODO: Named tuple
     center = ((x1 + x2) / 2, (y1 + y2) / 2)
     size = (abs(x1 - x2) + abs(y1 - y2)) / 2  # average of width and height
     size /= 2  # radius
-
     return center, size, ID
 
 class WebcamTrackerTest(object):
@@ -39,7 +37,7 @@ class WebcamTrackerTest(object):
             cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
         self.fs = FrameServer(cams, calibrations)
         self.detector = SpheroBlobDetector()
-        self.tracker = Sort(max_age=5, min_hits=3, iou_threshold=0.15)
+        self.tracker = Sort(max_age=1, min_hits=1, iou_threshold=0.15)
         
     def run(self):
         while True:
@@ -48,34 +46,24 @@ class WebcamTrackerTest(object):
             
             # Detect blobs.
             blobs, frame, mask = self.detector.detect(frame)
-            if len(blobs) != 3:
-                print(len(blobs))
-            real_blobs = []
-            for blob in blobs:
-                center = self.fs.transform(blob.pt)
-                bbox_size = self.fs.scale(blob.size / 2)
-                real_blobs.append((center, bbox_size))
             
-            # Track blobs using SORT.
-            detections = np.ndarray((len(real_blobs), 5))
-            for i, obj in enumerate(real_blobs):
+            # Prepare detections for tracking.
+            detections = np.ndarray((len(blobs), 5))
+            for i, blob in enumerate(blobs):
                 score = 1
-                bbox_size = obj[1]
-                x1 = obj[0][0] - bbox_size
-                x2 = obj[0][0] + bbox_size
-                y1 = obj[0][1] - bbox_size
-                y2 = obj[0][1] + bbox_size
+                bbox_size = blob.size / 2
+                x1 = blob.pt[0] - bbox_size
+                x2 = blob.pt[0] + bbox_size
+                y1 = blob.pt[1] - bbox_size
+                y2 = blob.pt[1] + bbox_size
                 detections[i] = np.array([x1, y1, x2, y2, score])
-
-            # Update the tracker.
-            tracked = self.tracker.update(detections)
+            
+            # Track blobs using SORT. Remove 'frame' from function call to disable drawing.
+            tracked, frame = self.tracker.update(detections, frame)
             
             for obj in tracked:
                 center, size, id = np_to_points(obj)
-                image_cnt = self.fs.inverse_transform(center)
-                image_cnt = (int(image_cnt[0]), int(image_cnt[1]))
-                image_size = size / self.fs.resolution
-                cv2.circle(frame, image_cnt, int(image_size), (0, 255, 255), 2)
+                image_cnt = int(center[0]), int(center[1])
                 cv2.circle(frame, image_cnt, 5, (0, 0, 255), -1)
                 frame = cv2.putText(frame, f'ID={int(id)}', (image_cnt[0] + 20, image_cnt[1] + 30), **self.detector.label_kwargs)
                     

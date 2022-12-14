@@ -21,6 +21,7 @@ from tf.transformations import quaternion_from_euler
 from sphero_constants import *
 
 # TODO: cathc concurrent.futures._base.TimeoutError
+# FIXME: high cpu usage
 
 class SpheroNode(object):
     def __init__(self):
@@ -49,7 +50,7 @@ class SpheroNode(object):
         self.last_cmd_heading = 0
         self.last_cmd_vel_time = rospy.Time.now()
         self.last_batt_pub_time = rospy.Time.now()
-        self.odom = Odometry(header=Header(frame_id="odom"), child_frame_id=f'{self.ns}/base_link')
+        self.odom = Odometry(header=Header(frame_id="odom"), child_frame_id=f'{self.ns}/base_footprint')
         self.odom_tare = Odometry()
         
         # Subscribers
@@ -67,7 +68,7 @@ class SpheroNode(object):
         
         # TF broadcaster
         self.broadcaster = tf2_ros.TransformBroadcaster()
-        self.odom_tf = TransformStamped(header=Header(frame_id="odom"), child_frame_id=f'{self.ns}/base_link')
+        self.odom_tf = TransformStamped(header=Header(frame_id="odom"), child_frame_id=f'{self.ns}/base_footprint')
         
         # Timers
         self.batt_timer = rospy.Timer(self.batt_pub_interval, self.get_battery_state)
@@ -75,7 +76,6 @@ class SpheroNode(object):
     ## Start, stop, and spin methods.
     def start(self):
         attempts_left = self.connection_attempts
-        # FIXME: ugly fix to separate connection attempts to multiple robots
         delay = float(self.ns.split('_')[-1]) * 2
         rospy.sleep(delay)
         
@@ -122,7 +122,6 @@ class SpheroNode(object):
             # if (now - self.last_batt_pub_time) > self.batt_pub_interval:
             #     self.last_batt_pub_time = now
             #     self.get_battery_state()
-                
             
             r.sleep()
             
@@ -285,6 +284,7 @@ class SpheroNode(object):
             speed (float): Speed in range 0-255
             heading (float): Heading in range 0-360
         """
+        # FIXME: This sometimes times out
         self.robot_api.set_heading(int(heading))
         self.robot_api.set_speed(int(speed))
         

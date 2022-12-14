@@ -25,8 +25,8 @@ class SpheroPositionPID(object):
         Ki = 0.0005 * 255
         Kd = 0
         Td = 0.15
-        lim_lo = -60
-        lim_hi = 60
+        lim_lo = -40
+        lim_hi = 40
         tol = 0.1
 
         # Initialize PID controllers.
