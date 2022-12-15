@@ -7,18 +7,48 @@ A package for external localization of Sphero robots.
     - A list of (unsorted and unidentified) positions is streamed via [mocap_optitrack](https://github.com/larics/mocap_optitrack).
     - Kalman filter is used to identify Spheros and estimate velocity.
     - Initial positioning and identification is accomplished with `sphero_init.py` script which sequentially turns on Sphero's LEDs and stores the only available position from mocap_optitrack.
+    - **Above functionality is currently broken and will be fixed to match webcam localization in the future.**
+- Webcam
+    - Uses a color or brightness filter (HSV values in general) to separate the Spheros from the background.
+    - Using known camera properties, the centers of detected Spheros are transformed to the world coordinate frame.
+    - Currently, SORT is used to associate measurements to Spheros and track them throughout the execution.
+- SORT
+    - Uses its own implementation of Kalman filter to track individual detected objects.
+    - In each step, new detections are matched with predictions from the last step so that the overall distance between them is minimized.
 - Kalman filter
+    - Used for providing a stable stream of position in case of sensor dropouts and for estimating the velocity.
     - Can be used with other localization methods trough simple topic remapping.
-    - If position of each Sphero is exactly known (one-on-one mapping), set the `/data_associated` parameter to true.
-    
+    - One Kalman filter node is used for each Sphero in its namespace. That means the measurements must be associated with correct Spheros.
+
+### Package structure
+    - **nodes** - ROS nodes.
+        - `kalman_filter_node.py` - One node for each Sphero.
+        - `webcam_tracking.py` - A centralized node for streaming the image, processing, detection, tracking, and publishing positions.
+    - **scripts** - Executable Python files that are intended to run independently from ROS.
+        - `camera_calibration` - Scripts for camera calibration. Run once for a new camera setup.
+        - `filter_param_finder.py` - An interactive way to determine the optimal HSV or RGB filter parameters.
+        - `tracking_test.py` - Testing the webcam tracking without ROS.
+    - **src** - Python files imported in nodes and scripts.
+        - `blob_detector.py` - Pipeline for detecting blobs in image.
+        - `duo_c270.py` - Pipeline for grabbing and processing frames from two Logitech C270 cameras.
+        - `kalman_filter.py` - Custom implementation of Kalman filter.
+        - `sort_wrapper.py` - ROS wrapper for SORT tracking. Currently not in use.
+        - `sort.py` - Implementation of SORT tracking algorithm.
+        - `sphero_init.py` - Procedure for getting initial Sphero positions. Currently not in use.
+
+### Detailed explanation of webcam localization
+1. We are using the [config file](config/config.yaml) to define which camera ports are used and where is their calibration data.
+1. `webcam_tracking.py` initializes the `FrameServer`, `SpheroBlobDetector`, and `Sort` and then runs the loop.
+1. `FrameServer` in `duo_c270.py` grabs the frame(s) from one or two cameras and undistorts them using provided calibration data. It is also used to transform image coordinates to the world frame.
+1. In the `SpheroBlobDetector` from `blob_detector.py`, the image frame from the `FrameServer` is blurred, filtered, and masked to highlight the pixels corresponding to the Spheros. Individual blobs are then located and their centers and sizes are fed to the `Sort` tracker in `sort.py`.
+1. `Sort` returns the list of bounding boxes of detected objects and their IDs.
+1. Using the object bounding boxes and IDs, `webcam_tracking.py` node publishes Sphero positions on their individual topics.
 
 ### Provided topics:
 - Publishers:
-    - `/<robot_name>/odom_est` (nav_msgs/Odometry) - Estimated position and velocity
-    - `/<robot_name>/debug_est` (nav_msgs/Odometry) - Estimated position and velocity at higher frequency
+    - `/<robot_name>/odom_est` (nav_msgs/Odometry) - Estimated position and velocity.
 - Subscribers:
-    - `/<robot_name>/odom` (nav_msgs/Odometry or geometry_msgs/PoseArray) - Position streamed from the external sensor. <br>
-    (_Note: Kalman filter currently expects inputs only from OptiTrack system or stage_ros simulator. The former uses PoseArray messages and position data is not mapped. The latter uses Odometry and the streamed positions are unique for each robot. This will be changed in the future to accept a wider range of measurements._)
+    - `/<robot_name>/position` (geometry_msgs/Point) - Position streamed from the external sensor.
 
 ### TODO:
 - [ ] Separate ROS from non-ROS code

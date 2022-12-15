@@ -20,7 +20,6 @@ from tf.transformations import quaternion_from_euler
 
 from sphero_constants import *
 
-# TODO: cathc concurrent.futures._base.TimeoutError
 # FIXME: high cpu usage
 
 class SpheroNode(object):
@@ -95,7 +94,7 @@ class SpheroNode(object):
         rospy.loginfo(f"Connected to Sphero '{self.ns}' with BT name {self.sphero_name}.")
         
         self.robot_api = SpheroEduAPI(self.robot_llc)  # FIXME: sometimes dies with bleak.exc.BleakDBusError: [org.bluez.Error.InProgress] In Progress
-        self.robot_api.__enter__()  # FIXME Then this dies with concurrent.futures._base.TimeoutError
+        self.robot_api.__enter__()  # FIXME: Then this dies with concurrent.futures._base.TimeoutError
         
         rospy.sleep(1.0)
         

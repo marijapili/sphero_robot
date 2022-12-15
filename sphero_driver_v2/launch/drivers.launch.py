@@ -27,7 +27,8 @@ def main():
         num_of_robots = int(sys.argv[1])
     except Exception as e:
         print("\033[31m You must provide the number of robots as argument.\033[0m")
-        print(f"Btw., I cought this exception\n{e}")
+        print(f"Btw., I caught this exception:\n{e}")
+        sys.exit(1)
     
     # Set up launch variables. These are hard-coded and they shouldn't be changed.
     package = rospkg.RosPack().get_path('sphero_driver_v2')
