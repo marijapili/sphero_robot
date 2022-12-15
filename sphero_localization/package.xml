@@ -16,9 +16,9 @@
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
 
-  <exec_depend>python3-imutils</exec_depend>
-  <exec_depend>python3-opencv</exec_depend>
-  <exec_depend>python3-filterpy</exec_depend>
+  <!-- <exec_depend>python3-imutils</exec_depend> -->
+  <!-- <exec_depend>python3-opencv</exec_depend> -->
+  <exec_depend>python3-filterpy-pip</exec_depend>
 
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>

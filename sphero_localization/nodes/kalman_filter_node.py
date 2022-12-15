@@ -25,7 +25,7 @@ class KalmanFilterNode(object):
         # Initialize class variables
         self.missing_counter = 0   # Counts iterations with missing marker information
         self.data_stream_freq = rospy.get_param('/data_stream_freq')
-        self.debug_enabled = rospy.get_param('/debug_kalman')
+        self.debug_enabled = rospy.get_param('/debug_kalman', False)
         self.ns = rospy.get_namespace().strip('/')
 
         self.filter = None

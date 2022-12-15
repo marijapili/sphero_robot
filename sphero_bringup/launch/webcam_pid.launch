@@ -14,9 +14,7 @@
     <node pkg="sphero_teleop" type="manual_ctrl_launch.sh" name="joystick_launcher" args="$(arg sensitivity) $(arg enabled)" output="screen"/>
 
     <!-- Start PID controllers. -->
-    <node pkg="sphero_control" type="position_pid_launch.sh" name="pid_launcher" output="screen">
-        <remap from="odom" to="odom_est"/>
-    </node>
+    <node pkg="sphero_control" type="position_pid_launch.sh" name="pid_launcher" output="screen" args="odom:=odom_est"/>
 
     <!-- Start velocity multiplexer for mixing signals from PID and joystick. -->
     <node pkg="sphero_bringup" type="twist_mux_launcher.sh" name="twist_mux_launcher" args="joy_pid" output="screen"/>

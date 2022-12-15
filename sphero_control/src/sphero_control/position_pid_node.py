@@ -12,8 +12,8 @@ class SpheroPositionPID(object):
     def __init__(self):
         # Initialize class variables.
         self.cmd_vel = Twist()
-        self.position = Point()
-        self.reference = Point()
+        self.position = None
+        self.reference = None
 
         # Define subscribers and publishers.
         pub = rospy.Publisher('pid_vel', Twist, queue_size=1)
@@ -35,9 +35,10 @@ class SpheroPositionPID(object):
 
         rate = rospy.Rate(1/Td)
         while not rospy.is_shutdown():
-            self.cmd_vel.linear.x = self.pid_x.compute(self.reference.x, self.position.x)
-            self.cmd_vel.linear.y = self.pid_y.compute(self.reference.y, self.position.y)
-            pub.publish(self.cmd_vel)
+            if self.reference is not None and self.position is not None:
+                self.cmd_vel.linear.x = self.pid_x.compute(self.reference.x, self.position.x)
+                self.cmd_vel.linear.y = self.pid_y.compute(self.reference.y, self.position.y)
+                pub.publish(self.cmd_vel)
             rate.sleep()
 
     def odom_cb(self, msg):

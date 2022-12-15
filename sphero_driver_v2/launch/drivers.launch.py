@@ -26,8 +26,8 @@ def main():
     try:
         num_of_robots = int(sys.argv[1])
     except Exception as e:
-        print("\033[31m You must provide the number of robots as argument.\033[0m")
-        print(f"Btw., I caught this exception:\n{e}")
+        print("\033[31mYou must provide the number of robots as argument.")
+        print(f"Btw., I caught this exception:\n{e}\033[0m  ")
         sys.exit(1)
     
     # Set up launch variables. These are hard-coded and they shouldn't be changed.

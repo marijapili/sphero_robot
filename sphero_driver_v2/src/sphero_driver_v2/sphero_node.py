@@ -81,7 +81,7 @@ class SpheroNode(object):
         rospy.loginfo("Trying to connect.")
         while attempts_left > 0:
             try:
-                self.robot_llc = SpheroScanner.find_toy(toy_name=self.sphero_name, timeout=1.0)
+                self.robot_llc = SpheroScanner.find_toy(toy_name=self.sphero_name, timeout=self.connection_timeout)
                 break
             except SpheroScanner.ToyNotFoundError:
                 attempts_left -= 1

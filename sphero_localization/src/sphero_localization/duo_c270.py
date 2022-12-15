@@ -30,7 +30,7 @@ class FrameServer(object):
             vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
             vs.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-            vs.set(cv2.CAP_PROP_FPS, 20)
+            vs.set(cv2.CAP_PROP_FPS, 30)
             print(f"Camera frame rate set to {vs.get(cv2.CAP_PROP_FPS)}.")
             self.streams.append(vs)
         
@@ -55,7 +55,7 @@ class FrameServer(object):
             self.cals.append(cal)
             
         # Set camera transformation parameters.
-        self.resolution = 0.004
+        self.resolution = 0.001875
             
         time.sleep(2.0)      
             
@@ -96,13 +96,13 @@ class FrameServer(object):
         return size * self.resolution
     
     def transform(self, cam_pt):
-        x_real = 0.0 + cam_pt[1] * self.resolution
-        y_real = 0.0 + cam_pt[0] * self.resolution
+        x_real = 0.0 + -cam_pt[0] * self.resolution
+        y_real = 0.0 + cam_pt[1] * self.resolution
         return (x_real, y_real)
     
     def inverse_transform(self, world_pt):
-        x_cam = world_pt[1] / self.resolution
-        y_cam = world_pt[0] / self.resolution
+        x_cam = -world_pt[0] / self.resolution
+        y_cam = world_pt[1] / self.resolution
         return (x_cam, y_cam)
     
     @staticmethod
