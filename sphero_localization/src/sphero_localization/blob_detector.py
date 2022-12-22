@@ -71,32 +71,31 @@ class SpheroBlobDetector(object):
 def main():
     detector = SpheroBlobDetector()
     
-    vs = cv2.VideoCapture('/dev/video2')
-    vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-
+    cams = [
+            '/dev/video4',
+            '/dev/video2',
+    ]
+    calibrations = [
+        '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_north.json',
+        '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_south.json'
+    ]
+    stitch_param = '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/stitch_params.json'
+    
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.namedWindow("proc", cv2.WINDOW_NORMAL)
-
-    # allow the camera or video file to warm up
-    time.sleep(2.0)
+    
+    fs = FrameServer(cams, calibrations, stitch_param)
 
     while True:
         # grab the current frame
-        ret, frame = vs.read()
+        _, frame = fs.grab()
 
-        # if we are viewing a video and we did not grab a frame,
-        # then we have reached the end of the video
-        if frame is None:  # TODO
-            break
-
-        _, frame, mask = detector.detect(frame)
-        
+        pts, frame, mask = detector.detect(frame)
         
         cv2.imshow("frame", frame)
         cv2.imshow("proc", mask)
-        cv2.resizeWindow('frame', 720, 540)
-        cv2.resizeWindow('proc', 720, 540)
+        cv2.resizeWindow('frame', fs.DOUBLE_WINDOW)
+        cv2.resizeWindow('proc', fs.DOUBLE_WINDOW)
     
         key = cv2.waitKey(1) & 0xFF
         # if the 'q' key is pressed, stop the loop
@@ -104,11 +103,12 @@ def main():
             break
 
     # if we are not using a video file, stop the camera video stream
-    vs.release()
+    fs.stop()
     # otherwise, release the camera
     # close all windows
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
+    from sphero_localization.duo_c270 import FrameServer
     main()

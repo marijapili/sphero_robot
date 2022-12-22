@@ -1,10 +1,15 @@
 # Linux path to the cameras. Example: /dev/video0
 cameras:
   - '/dev/video2'
+  - '/dev/video4'
 
 # Camera calibration files. Must be in the same directory as this config.
 calibrations:
   - 'camera_south.json'
+  - 'camera_north.json'
+
+# Camera stitching config file. Must be in the same directory as this config.
+stitching: 'stitch_params.json'
 
 # Show a window with camera stream.
 show_stream: True

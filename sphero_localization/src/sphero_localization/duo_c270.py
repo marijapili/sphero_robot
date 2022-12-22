@@ -6,37 +6,86 @@ import json
 import numpy as np
 from imutils.video import VideoStream
 
+from threading import Thread, Lock
+
 # TODO: transform
-# TODO: threading
+# TODO: error outputs
 
 
+class WebcamStream(object):
+    def __init__(self, src, run_async=False):
+        self.stream = cv2.VideoCapture(src, cv2.CAP_V4L2)
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
+        self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.stream.set(cv2.CAP_PROP_FPS, 30)
+        print(f"Camera frame rate set to {self.stream.get(cv2.CAP_PROP_FPS)}.")
+        
+        (_, self.frame) = self.stream.read()
+        
+        self.name = src.split('/')[-1]
+        
+        self.stopped = False
+        self.is_async = run_async
+        self.new_frame = False
+        self.lock = Lock()
+        self.thread = None
+        
+    def start(self):
+        # start the thread to read frames from the video stream
+        if self.is_async:
+            self.thread = Thread(target=self.update, name=self.name, args=())
+            self.thread.daemon = True
+            self.thread.start()
+            return self
+    
+    def update(self):
+        # keep looping infinitely until the thread is stopped
+        while True:
+            # if the thread indicator variable is set, stop the thread
+            if self.stopped:
+                return
+
+            # otherwise, read the next frame from the stream
+            (_, self.frame) = self.stream.read()
+            with self.lock:
+                self.new_frame = True
+            
+    def read(self):
+        if self.is_async:
+            while not self.new_frame:
+                pass
+                
+            with self.lock:
+                self.new_frame = False
+                return self.frame
+        else:
+            (_, self.frame) = self.stream.read()
+            return self.frame
+    
+    def stop(self):
+        # indicate that the thread should be stopped
+        self.stopped = True
+        while self.thread is not None and self.thread.isAlive():
+            pass
+        self.stream.release()
+        
+    
 class FrameServer(object):
     CAM_RESOLUTION = (1280, 960)
     SINGLE_WINDOW = (960, 720)
     DOUBLE_WINDOW = (576, 864)
     
-    def __init__(self, devices, cal_files=[]):
+    def __init__(self, devices, cal_files=[], stitch_file=None):
         
         assert len(devices) > 0
         
+        # TODO: move these parameters somewhere
         self.overlap = 1
+        self.blur_width = 10
         
-        self.streams = []
+        # Load calibration files.
         self.cals = []
-        
-        # Open camera streams.
-        for dev in devices:
-            vs = cv2.VideoCapture(dev, cv2.CAP_V4L2)
-            vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-            vs.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-            vs.set(cv2.CAP_PROP_FPS, 30)
-            print(f"Camera frame rate set to {vs.get(cv2.CAP_PROP_FPS)}.")
-            self.streams.append(vs)
-        
-        self.window_size = self.SINGLE_WINDOW if len(devices) == 1 else self.DOUBLE_WINDOW
-            
-        # Open calibration files.
         for cal_file in cal_files:
             if cal_file is None:
                 cal = None
@@ -53,33 +102,58 @@ class FrameServer(object):
                                                                         0, 
                                                                         self.CAM_RESOLUTION)
             self.cals.append(cal)
+         
+        # Load stitching parameters file.
+        self.warp_matrix = None
+        self.crop_limits = None
+        if stitch_file is not None:
+            with open(stitch_file, 'r') as json_file:
+                stitch_data = json.load(json_file)
+            
+            self.warp_matrix = np.array(stitch_data['tf_mat'])
+            self.crop_limits = stitch_data['crop']
+            self.frame_size = (stitch_data['dim'][1], stitch_data['dim'][0])
+            self.join_frames = self.affine_join
+        else:
+            self.warp_matrix = None
+            self.join_frames = self.fixed_join
+            self.frame_size = (self.CAM_RESOLUTION[1], self.CAM_RESOLUTION[0])
+        
+        # Open camera streams.
+        self.streams = []
+        for dev in devices:
+            vs = WebcamStream(dev, run_async=True)
+            vs.start()
+            self.streams.append(vs)
+        
+        self.window_size = self.SINGLE_WINDOW if len(devices) == 1 else self.DOUBLE_WINDOW
             
         # Set camera transformation parameters.
         self.resolution = 0.001875
             
-        time.sleep(2.0)      
-            
+        time.sleep(2.0)
+
     def stop(self):
         for vs in self.streams:
-            vs.release()
+            vs.stop()
             
     # TODO: rewrite this method to be more professional. (multiple returns)
     def grab(self, ret_original=False):
         original_frames = []
         for vs in self.streams:
-            ret, frame = vs.read()
+            frame = vs.read()
             original_frames.append(frame)
             
         if self.cals:
             undistorted = self.undistort(original_frames)
-            undistorted_joined = FrameServer.fixed_join(undistorted, self.overlap)
+            undistorted_joined = self.join_frames(undistorted)
             if ret_original:
-                original_joined = FrameServer.fixed_join(original_frames, self.overlap)
+                original_joined = self.join_frames(original_frames)
                 return undistorted, undistorted_joined, original_frames, original_joined
             else:
                 return undistorted, undistorted_joined
         
-        original_joined = FrameServer.fixed_join(original_frames, self.overlap)
+        original_joined = self.join_frames(original_frames)
         return original_frames, original_joined
     
     def undistort(self, frames):
@@ -96,57 +170,76 @@ class FrameServer(object):
         return size * self.resolution
     
     def transform(self, cam_pt):
-        x_real = 0.0 + -cam_pt[0] * self.resolution
-        y_real = 0.0 + cam_pt[1] * self.resolution
+        x_real = 0.0 + cam_pt[0] * self.resolution
+        y_real = 0.0 + (self.frame_size[1] - cam_pt[1]) * self.resolution
         return (x_real, y_real)
     
     def inverse_transform(self, world_pt):
+        raise NotImplementedError("Why do you need this?")
         x_cam = -world_pt[0] / self.resolution
         y_cam = world_pt[1] / self.resolution
         return (x_cam, y_cam)
     
-    @staticmethod
-    def fixed_join(frames, overlap):
-        offset = overlap
-        
+    def fixed_join(self, frames):
         cropped = []
         for i, frame in enumerate(frames):
             new_frame = frame.copy()
             if i != 0:
                 # Crop upper part.
-                new_frame = new_frame[offset:, :]
+                new_frame = new_frame[self.overlap:, :]
             if i != len(frames) - 1:
                 # Crop lower part.
-                new_frame = new_frame[:-offset, :]
+                new_frame = new_frame[:-self.overlap, :]
             cropped.append(new_frame)
         
         return cv2.vconcat(cropped)
-            
+    
+    def affine_join(self, frames):
+        warp = cv2.warpAffine(frames[1], self.warp_matrix, (frames[1].shape[1], frames[1].shape[0] + frames[1].shape[0]))
+        warp[0:frames[0].shape[0], 0:frames[0].shape[1]] = frames[0]
+        warp = warp[self.crop_limits[0][0]:self.crop_limits[0][1],
+                    self.crop_limits[1][0]:self.crop_limits[1][1]]
+        
+        img_mid = frames[0].shape[0]
+        roi = warp[img_mid - self.blur_width:img_mid + self.blur_width, :]
+        blur = cv2.medianBlur(roi, 3)
+        warp[img_mid - self.blur_width:img_mid + self.blur_width, :] = blur
+        
+        return warp
+        
 
 def main():
     cams = [
-            # '/dev/video4',
+            '/dev/video4',
             '/dev/video2',
     ]
     
     calibrations = [
-        # '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_north.json',
+        '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_north.json',
         '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/camera_south.json'
     ]
+    stitch_param = '/home/marko/WS/sphero_ws/src/sphero/sphero_localization/config/stitch_params.json'
     
     # cv2.namedWindow("north", cv2.WINDOW_NORMAL)
     # cv2.namedWindow("south", cv2.WINDOW_NORMAL)
     cv2.namedWindow("joined", cv2.WINDOW_NORMAL)
     
-    fs = FrameServer(cams, calibrations)
+    fs = FrameServer(cams, calibrations, stitch_param)
     
-    old = time.perf_counter()
-    
+    from collections import deque
+    s = 0
+    n = 20
+    history = deque([0]* n, maxlen=n)
+    iter_start = time.perf_counter()
     while True:
+        grab_start = time.perf_counter()
         _, joined = fs.grab()
-        new = time.perf_counter()
-        print(1 / (new - old))
-        old = new
+        iter_end = time.perf_counter()
+        elapsed = iter_end - iter_start
+        s += elapsed - history.popleft()
+        history.append(elapsed)
+        print(f"{1 / elapsed:5.2f} | avg = {1 / (s / n):5.2f} | {iter_end - grab_start}")
+        iter_start = iter_end
        
         # cv2.imshow("north", individual[0])
         # cv2.resizeWindow('north', 960, 720)
@@ -156,7 +249,6 @@ def main():
         cv2.imshow("joined", joined)
         cv2.resizeWindow('joined', fs.window_size)
 
-        
         key = cv2.waitKey(1) & 0xFF
         # if the 'q' key is pressed, stop the loop
         if key == ord("q"):
