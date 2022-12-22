@@ -25,7 +25,7 @@ More packages are coming soon:
         - None at the moment
 - Python 3.x
     - Additional libraries:
-        - `pip3 install numpy imutils bleak opencv-python`
+        - `pip3 install numpy imutils bleak opencv-python ruamel.yaml`
     
 ### Installation
 1. Install all the requirements.

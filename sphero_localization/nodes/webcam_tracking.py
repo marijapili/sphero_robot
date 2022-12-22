@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import time
-import yaml
+from ruamel.yaml import YAML
 import cv2
 import imutils
 import numpy as np
@@ -9,10 +9,13 @@ import rospy
 from imutils.video import VideoStream
 from std_msgs.msg import ColorRGBA
 from geometry_msgs.msg import Point
+from pathlib import Path
 
 from sphero_localization.duo_c270 import FrameServer
 from sphero_localization.sort import Sort
 from sphero_localization.blob_detector import SpheroBlobDetector
+
+yaml = YAML()
 
 
 def np_to_points(np_array):
@@ -44,11 +47,13 @@ class WebcamTracker(object):
             pub.publish(0.0, 0.0, 0.0, 0.0)
 
         # Load config parameters.
-        config_path = rospy.get_param('~config_path')
-        with open(config_path, 'r') as config_file:
-            config = yaml.safe_load(config_file)
+        config_file_path = rospy.get_param('~config_path')
+        config_folder_path = Path(config_file_path).parent
+        with open(config_file_path, 'r') as config_file:
+            config = yaml.load(config_file)
         cams = config['cameras']
-        calibrations = [f"{config_path.rpartition('/')[0]}/{cal}" for cal in config['calibrations']]
+        calibrations = [f"{config_folder_path}/{cal}" for cal in config['calibrations']]
+        stitch_file = f"{config_folder_path}/{config['stitching']}"
         self.show_stream = config['show_stream']
         
         # Initialize camera, detector, and SORT tracker.
@@ -57,7 +62,7 @@ class WebcamTracker(object):
             cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
         else:
             cv2.namedWindow("CV2 window", cv2.WINDOW_NORMAL)
-        self.fs = FrameServer(cams, calibrations)
+        self.fs = FrameServer(cams, calibrations, stitch_file)
         self.detector = SpheroBlobDetector()
         self.tracker = Sort(max_age=1, min_hits=1, iou_threshold=0.15)  # TODO: this tracker is not good
         
