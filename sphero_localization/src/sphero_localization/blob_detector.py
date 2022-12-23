@@ -18,7 +18,7 @@ class SpheroBlobDetector(object):
             params.maxThreshold = 255
             # Filter by Area.
             params.filterByArea = True
-            params.minArea = 400
+            params.minArea = 300
             # Filter by Circularity
             params.filterByCircularity = True
             params.minCircularity = 0.2

@@ -98,10 +98,10 @@ class KalmanBoxTracker(object):
     self.kf.H = np.array([[1,0,0,0,0,0,0],[0,1,0,0,0,0,0],[0,0,1,0,0,0,0],[0,0,0,1,0,0,0]])
 
     self.kf.R[2:,2:] *= 0.0001
-    self.kf.P[4:,4:] *= 1000. #give high uncertainty to the unobservable initial velocities
+    self.kf.P[4:,4:] *= 0.0001 #give high uncertainty to the unobservable initial velocities
     self.kf.P *= 10.
-    self.kf.Q[-1,-1] *= 100
-    self.kf.Q[4:,4:] *= 100
+    self.kf.Q[-1,-1] *= 10
+    self.kf.Q[4:,4:] *= 10
 
     self.kf.x[:4] = convert_bbox_to_z(bbox)
     self.time_since_update = 0

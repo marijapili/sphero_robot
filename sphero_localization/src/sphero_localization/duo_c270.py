@@ -129,7 +129,7 @@ class FrameServer(object):
         self.window_size = self.SINGLE_WINDOW if len(devices) == 1 else self.DOUBLE_WINDOW
             
         # Set camera transformation parameters.
-        self.resolution = 0.001875
+        self.resolution = 0.03 / 18  # meters per pixel
             
         time.sleep(2.0)
 
@@ -202,7 +202,7 @@ class FrameServer(object):
         
         img_mid = frames[0].shape[0]
         roi = warp[img_mid - self.blur_width:img_mid + self.blur_width, :]
-        blur = cv2.medianBlur(roi, 3)
+        blur = cv2.medianBlur(roi, 5)
         warp[img_mid - self.blur_width:img_mid + self.blur_width, :] = blur
         
         return warp

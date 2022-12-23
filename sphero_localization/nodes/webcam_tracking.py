@@ -64,7 +64,11 @@ class WebcamTracker(object):
             cv2.namedWindow("CV2 window", cv2.WINDOW_NORMAL)
         self.fs = FrameServer(cams, calibrations, stitch_file)
         self.detector = SpheroBlobDetector()
-        self.tracker = Sort(max_age=1, min_hits=1, iou_threshold=0.15)  # TODO: this tracker is not good
+        self.tracker = Sort(max_age=5, min_hits=1, iou_threshold=-1)
+        # TODO: Improve tracker.
+        #       Setting iou_threshold to -1 ensures that the track is not lost
+        #       in case of a large jump, but increases the chance of switching
+        #       IDs between two robots.
         
         self.freq = rospy.get_param('/data_stream_freq')
         
