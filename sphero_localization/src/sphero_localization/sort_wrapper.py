@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
-import message_filters as mf
 import numpy as np
 
 from std_msgs.msg import ColorRGBA
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
 
@@ -19,7 +17,7 @@ def np_to_points(np_array):
               Point(x2, y1, 0),
               Point(x2, y2, 0),
               Point(x1, y2, 0)]
-    
+
     # TODO: Named tuple
     center = ((x1 + x2) / 2, (y1 + y2) / 2)
 
@@ -57,6 +55,7 @@ def create_markers(points, ID):
 
     return box, text
 
+
 # TODO: make parameters more accessible
 class SORTwrapper(object):
     def __init__(self, max_age=5, min_hits=3, iou_threshold=0.15, num_robots=1):
@@ -83,7 +82,7 @@ class SORTwrapper(object):
     def update_cb(self, data):
         """
         Update tracker with new measurements.
-        
+
         params:
             data (list[tuple[float, float]]): Centers of measurements.
         """
@@ -100,11 +99,11 @@ class SORTwrapper(object):
 
         # Update the tracker.
         tracked = self.tracker.update(detections)
-        
+
         marker_array = MarkerArray()
         for obj in tracked:
             points, center, id = np_to_points(obj)
-            
+
             # Publish positions of tracked objects.
             temp_msg = Point()
             temp_msg.x = center[0]
@@ -117,5 +116,5 @@ class SORTwrapper(object):
             bbox, name = create_markers(points, id)
             marker_array.markers.append(bbox)
             marker_array.markers.append(name)
-        
+
         self.markers_pub.publish(marker_array)

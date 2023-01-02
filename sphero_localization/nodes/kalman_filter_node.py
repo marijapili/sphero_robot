@@ -4,7 +4,7 @@
 import tf2_ros
 import rospy
 import threading
-from geometry_msgs.msg import PoseArray, Point, TransformStamped, Quaternion
+from geometry_msgs.msg import Point, TransformStamped, Quaternion
 from nav_msgs.msg import Odometry
 
 from sphero_localization.kalman_filter import KalmanFilter
@@ -57,22 +57,22 @@ class KalmanFilterNode(object):
 
         # Main while loop.
         rate = rospy.Rate(self.data_stream_freq)
-        
+
         while not rospy.is_shutdown():
             # Compute the predict step.
             self.X_est = self.filter.predict()
-            
+
             # Compute the update step.
             with self.lock:
                 if self.last_measurement is not None:
                     self.X_est = self.filter.update(self.last_measurement)
                     self.last_measurement = None
-                    
-            # Publish the current estimate. 
+
+            # Publish the current estimate.
             self.X_est.header.stamp = rospy.Time.now()
-            self.X_est.header.frame_id = self.ns + '/base_link'     
+            self.X_est.header.frame_id = self.ns + '/base_link'
             pub.publish(self.X_est)
-            
+
             t = TransformStamped()
             t.header.stamp = rospy.Time.now()
             t.header.frame_id = "world"
@@ -82,7 +82,7 @@ class KalmanFilterNode(object):
             t.transform.translation.z = 0.0
             t.transform.rotation = Quaternion(0, 0, 0, 1)
             br.sendTransform(t)
-            
+
             rospy.logdebug(' x = % 7.5f', self.X_est.pose.pose.position.x)
             rospy.logdebug(' y = % 7.5f', self.X_est.pose.pose.position.y)
             rospy.logdebug('vx = % 7.5f', self.X_est.twist.twist.linear.x)

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import division
-import rospy
 import numpy as np
 import numpy.linalg as npl
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 
 
 class KalmanFilter(object):

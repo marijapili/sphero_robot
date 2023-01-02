@@ -48,7 +48,6 @@ class PID(object):
         if abs(error) < self.tol:
             u = 0
 
-
         # Save current values for next iteration
         self.ui_old = ui
         self.error_old = error

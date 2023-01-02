@@ -14,7 +14,6 @@ or
 """
 import cv2
 import argparse
-from operator import xor
 from sphero_localization.duo_c270 import FrameServer
 
 
@@ -44,7 +43,7 @@ def get_arguments():
     args = vars(ap.parse_args())
 
     if not args['filter'].upper() in ['RGB', 'HSV']:
-        ap.error("Please speciy a correct filter.")
+        ap.error("Please specify a correct filter.")
 
     return args
 
@@ -63,7 +62,7 @@ def get_trackbar_values(range_filter):
 def main():
     args = get_arguments()
     range_filter = args['filter'].upper()
-    
+
     if args['preview']:
         cv2.namedWindow("Preview", cv2.WINDOW_NORMAL)
     else:
@@ -76,7 +75,7 @@ def main():
 
     while True:
         individual, joined = fs.grab()
-        
+
         if len(individual) == 1:
             image = individual[0]
             window = fs.SINGLE_WINDOW

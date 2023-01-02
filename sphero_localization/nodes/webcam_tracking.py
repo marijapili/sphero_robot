@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time
-from ruamel.yaml import YAML
-import cv2
-import imutils
-import numpy as np
-import rospy
-from imutils.video import VideoStream
-from std_msgs.msg import ColorRGBA
-from geometry_msgs.msg import Point
 from pathlib import Path
 
+import cv2
+import numpy as np
+import rospy
+from ruamel.yaml import YAML
+from geometry_msgs.msg import Point
+from std_msgs.msg import ColorRGBA
+
+from sphero_localization.blob_detector import SpheroBlobDetector
 from sphero_localization.duo_c270 import FrameServer
 from sphero_localization.sort import Sort
-from sphero_localization.blob_detector import SpheroBlobDetector
 
 yaml = YAML()
 
@@ -31,15 +29,15 @@ class WebcamTracker(object):
     def __init__(self):
         self.num_robots = rospy.get_param('/num_of_robots', 1)
         self.robot_name = rospy.get_param('/robot_name', 'sphero')
-        
+
         # Create publishers for positions.
         self.pos_pubs = [rospy.Publisher(f'/{self.robot_name}_{i}/position', Point, queue_size=1)
                          for i in range(self.num_robots)]
-        
+
         # Create publishers for sending color commands.
-        self.color_pubs = [rospy.Publisher(f'/{self.robot_name}_{i}/set_color', ColorRGBA, queue_size=1) 
+        self.color_pubs = [rospy.Publisher(f'/{self.robot_name}_{i}/set_color', ColorRGBA, queue_size=1)
                            for i in range(self.num_robots)]
-        
+
         rospy.sleep(0.5)
 
         # Initially turn off LEDs on all robots.
@@ -55,7 +53,7 @@ class WebcamTracker(object):
         calibrations = [f"{config_folder_path}/{cal}" for cal in config['calibrations']]
         stitch_file = f"{config_folder_path}/{config['stitching']}"
         self.show_stream = config['show_stream']
-        
+
         # Initialize camera, detector, and SORT tracker.
         if self.show_stream:
             cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
@@ -69,16 +67,16 @@ class WebcamTracker(object):
         #       Setting iou_threshold to -1 ensures that the track is not lost
         #       in case of a large jump, but increases the chance of switching
         #       IDs between two robots.
-        
+
         self.freq = rospy.get_param('/data_stream_freq')
-        
+
     def run(self):
         r = rospy.Rate(self.freq)
         led_initialized = [False] * self.num_robots
         led_countdown = [2 * self.freq] * self.num_robots
-        
+
         ok = True
-        
+
         while not rospy.is_shutdown():
             # Turn on LEDs one by one.
             if not all(led_initialized):
@@ -89,13 +87,13 @@ class WebcamTracker(object):
                     else:
                         self.color_pubs[i].publish(0.0, 1.0, 0.0, 1.0)
                         led_initialized[i] = True
-            
+
             # Grab the current frame.
             _, frame = self.fs.grab()
-            
+
             # Detect blobs.
             blobs, frame, mask = self.detector.detect(frame)
-            
+
             # Prepare detections for tracking.
             detections = np.ndarray((len(blobs), 5))
             for i, blob in enumerate(blobs):
@@ -106,44 +104,45 @@ class WebcamTracker(object):
                 y1 = blob.pt[1] - bbox_size
                 y2 = blob.pt[1] + bbox_size
                 detections[i] = np.array([x1, y1, x2, y2, score])
-            
+
             # Track blobs using SORT. Remove 'frame' from function call to disable drawing.
             tracked, frame = self.tracker.update(detections, frame)
-            
+
             for obj in tracked:
                 cnt, size, id = np_to_points(obj)
                 if id >= self.num_robots:
-                    rospy.loginfo_throttle(5, 
+                    rospy.loginfo_throttle(5,
                                            "\033[33mOh no! "
                                            "Tracking algorithm returned ID larger than the number of robots. "
                                            "Assigned positions may be incorrect.\n"
                                            "Focus CV2 window and press Q to restart.\033[0m")
                     ok = False
-                    
+
                 # Draw detections on the camera feed.
                 image_cnt = int(cnt[0]), int(cnt[1])
                 cv2.circle(frame, image_cnt, 5, (0, 0, 255), -1)
-                frame = cv2.putText(frame, f'ID={int(id)}', (image_cnt[0] + 20, image_cnt[1] + 30), **self.detector.label_kwargs)
-                
+                frame = cv2.putText(frame, f'ID={int(id)}', (image_cnt[0] + 20, image_cnt[1] + 30),
+                                    **self.detector.label_kwargs)
+
                 # Publish real world coordinates.
                 if ok:
                     cnt_real = self.fs.transform(cnt)
                     self.pos_pubs[id].publish(Point(cnt_real[0], cnt_real[1], 0))
-            
+
             # Show the frames
             if self.show_stream:
                 cv2.imshow('Camera', frame)
                 cv2.imshow('Mask', mask)
                 cv2.resizeWindow('Camera', *self.fs.window_size)
                 cv2.resizeWindow('Mask', *self.fs.window_size)
-            
+
             key = cv2.waitKey(1) & 0xFF
             # if the 'q' key is pressed, stop the loop
             if key == ord("q"):
                 return
-            
+
             r.sleep()
-            
+
     def shutdown(self):
         self.fs.stop()
         cv2.destroyAllWindows()

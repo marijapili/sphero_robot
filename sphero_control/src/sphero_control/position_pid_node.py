@@ -33,7 +33,7 @@ class SpheroPositionPID(object):
         self.pid_x = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi, tol)
         self.pid_y = PID(Kp, Ki, Kd, Td, lim_lo, lim_hi, tol)
 
-        rate = rospy.Rate(1/Td)
+        rate = rospy.Rate(1 / Td)
         while not rospy.is_shutdown():
             if self.reference is not None and self.position is not None:
                 self.cmd_vel.linear.x = self.pid_x.compute(self.reference.x, self.position.x)
