@@ -113,9 +113,11 @@ class WebcamTracker(object):
             for obj in tracked:
                 cnt, size, id = np_to_points(obj)
                 if id >= self.num_robots:
-                    rospy.logerr("Oh no! Tracking algorithm returned ID larger than the number of robots. "
-                                 "Impossible to assign positions correctly.\n"
-                                 "Focus CV2 window and press Q to restart.")
+                    rospy.loginfo_throttle(5, 
+                                           "\033[33mOh no! "
+                                           "Tracking algorithm returned ID larger than the number of robots. "
+                                           "Assigned positions may be incorrect.\n"
+                                           "Focus CV2 window and press Q to restart.\033[0m")
                     ok = False
                     
                 # Draw detections on the camera feed.
