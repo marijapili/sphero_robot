@@ -52,5 +52,18 @@ A package for external localization of Sphero robots.
 - Subscribers:
     - `/<robot_name>/position` (geometry_msgs/Point) - Position streamed from the external sensor.
 
+### Map server
+Map server is not included in any of the launch files because using maps is not a default use case of this package.
+However, several maps are provided for Multi-Robot Systems 2022/2023 course for convenience and here is an example 
+of how to include the map server in your launch files.
+```xml
+<arg name="map_name" default="empty"/>
+<arg name="map_yaml" default="$(find sphero_localization)/maps/$(arg map_name)/$(arg map_name).yaml"/>
+<node pkg="map_server" type="map_server" args="$(arg map_yaml)" name="map_server">
+    <param name="frame_id" value="world"/>
+</node>
+```
+
+
 ### TODO:
 - [ ] Separate ROS from non-ROS code

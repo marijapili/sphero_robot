@@ -129,7 +129,7 @@ class FrameServer(object):
         self.window_size = self.SINGLE_WINDOW if len(devices) == 1 else self.DOUBLE_WINDOW
             
         # Set camera transformation parameters.
-        self.resolution = 0.03 / 18  # meters per pixel
+        self.resolution = 0.04 / 18  # meters per pixel
             
         time.sleep(2.0)
 
@@ -176,9 +176,6 @@ class FrameServer(object):
     
     def inverse_transform(self, world_pt):
         raise NotImplementedError("Why do you need this?")
-        x_cam = -world_pt[0] / self.resolution
-        y_cam = world_pt[1] / self.resolution
-        return (x_cam, y_cam)
     
     def fixed_join(self, frames):
         cropped = []
