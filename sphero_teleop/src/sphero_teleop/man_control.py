@@ -28,7 +28,7 @@ class ManControlNode(object):
 
         # Set class variables
         self.sensitivity = rospy.get_param('~sensitivity', 0.2)  # left stick sensitivity
-        self.frequency = 10
+        self.frequency = rospy.get_param('/ctrl_loop_freq', 10)
         self.real_vel_stp = 0.5
         self.driving_mode = 'analog'
         self.manual_calibration = False

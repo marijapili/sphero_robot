@@ -35,7 +35,7 @@ class SpheroNode(object):
         
         # Other parameters
         self.cmd_vel_timeout = rospy.Duration(nsecs=rospy.get_param('~cmd_vel_timeout', 2.0) * 1e9)
-        self.batt_pub_interval = rospy.Duration(nsecs=5.0 * 1e9)
+        self.batt_pub_interval = rospy.Duration(nsecs=10.0 * 1e9)
         
         # Robot APIs
         self.robot_llc = None
@@ -118,9 +118,6 @@ class SpheroNode(object):
             # Publish sensor readings.
             self.get_imu()
             self.get_odometry()
-            # if (now - self.last_batt_pub_time) > self.batt_pub_interval:
-            #     self.last_batt_pub_time = now
-            #     self.get_battery_state()
             
             r.sleep()
             
@@ -284,8 +281,7 @@ class SpheroNode(object):
             heading (float): Heading in range 0-360
         """
         # FIXME: This sometimes times out
-        self.robot_api.set_heading(int(heading))
-        self.robot_api.set_speed(int(speed))
+        self.robot_api.roll(int(heading), int(speed), duration=None)
         
     @staticmethod
     def normalize_angle_positive(angle):
@@ -303,8 +299,3 @@ if __name__ == "__main__":
         node.spin()
     except rospy.ROSInterruptException as e:
         pass
-    #     print(f'ROS exception\n{e}')
-    #     node.stop()
-    # finally:
-    #     print('Shutting down normally.')
-    #     node.stop()
