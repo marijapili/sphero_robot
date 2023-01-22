@@ -7,16 +7,21 @@ import numpy as np
 import cv2 as cv
 import glob
 import json
+import os
+from pathlib import Path
 from datetime import datetime
 
 
-with open('camera.json', 'r') as json_file:
+with open(f"{os.path.dirname(os.path.realpath(__file__))}/camera.json", 'r') as json_file:
     camera_data = json.load(json_file)
 dist = np.array(camera_data["dist"])
 mtx = np.array(camera_data["mtx"])
 
-images = glob.glob('pictures/raw/calibrate*.png')
+images = glob.glob(f"{os.path.dirname(os.path.realpath(__file__))}/pictures/raw/calibrate*.png")
 print(len(images), "images found")
+
+save_path = Path(__file__).parent / 'pictures/fixed'
+save_path.mkdir(parents=True, exist_ok=True)
 
 assert len(images) > 0
 
@@ -35,5 +40,6 @@ for fname in images:
     # dst = dst[y:yh1, x:xw1]
 
     cv.imshow('img', dst)
-    cv.imwrite(f"pictures/fixed/remapped_{fname.partition('_')[2]}", dst)
+    fname = fname.split('/')[-1]
+    cv.imwrite(f"{os.path.dirname(os.path.realpath(__file__))}/pictures/fixed/remapped_{fname.partition('_')[2]}", dst)
     # cv.waitKey(1000)
